@@ -16,6 +16,7 @@ colorama==0.4.6
 crispy-bootstrap4==2024.1
 cryptography==43.0.3
 distlib==0.3.8
+dj-database-url==3.0.0
 dj-rest-auth==7.0.1
 Django==5.1.6
 django-allauth==65.1.0
