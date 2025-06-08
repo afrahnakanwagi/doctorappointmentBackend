@@ -36,11 +36,14 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "django.contrib.staticfiles"
+    "django.contrib.staticfiles",
     "appointmentapi",
     "users",
     "rest_framework",
 ]
+
+AUTH_USER_MODEL = 'users.User'
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -77,11 +80,12 @@ WSGI_APPLICATION = "doctorappointmentBackend.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
 from urllib.parse import urlparse
 import dj_database_url
 
-DATABASE_URL = os.getenv('DATABASE_URL')
-
+DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///db.sqlite3')  # fallback for safety
 db_info = urlparse(DATABASE_URL)
 
 DATABASES = {
@@ -89,7 +93,7 @@ DATABASES = {
         default=DATABASE_URL,
         conn_max_age=600,
         conn_health_checks=True,
-        ssl_require=True
+        ssl_require=DATABASE_URL.startswith('postgres')
     )
 }
 
