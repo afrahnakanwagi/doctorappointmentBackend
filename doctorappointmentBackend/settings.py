@@ -175,14 +175,14 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
-EMAIL_HOST_USER = 'afrahnakawagi@gmail.com'
-EMAIL_HOST_PASSWORD = 'phehrqelyjcbpxyd'  # Your app password without spaces
-DEFAULT_FROM_EMAIL = 'afrahnakawagi@gmail.com'
-SERVER_EMAIL = 'afrahnakawagi@gmail.com'
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='')
+SERVER_EMAIL = config('SERVER_EMAIL', default='')
 
 # SendGrid Configuration
-SENDGRID_API_KEY = 'REMOVED_SECRET'
-SENDGRID_TEMPLATE_ID = 'd-d4f1d6f64f84476881d7d1eb00cfdecd'
+SENDGRID_API_KEY = config('SENDGRID_API_KEY', default='')
+SENDGRID_TEMPLATE_ID = config('SENDGRID_TEMPLATE_ID')
 
 # Additional email settings for better security
 EMAIL_TIMEOUT = 600
