@@ -20,7 +20,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-k1*0m4ini*45mvh$*stv5-*dhn_4p_x&&w1zvg#g966y&0o@5x"
+from decouple import config
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -41,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",  # MOVED TO TOP - This is important!
     "appointmentapi",
     "users",
     "rest_framework",
@@ -48,7 +50,6 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "decouple",
     "django_extensions",
-    "corsheaders",
 ]
 
 
@@ -56,21 +57,26 @@ AUTH_USER_MODEL = 'users.User'
 
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",  # MOVED TO TOP - This is critical!
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+# CORS Settings - Fixed and simplified
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+#     "https://doctorappointment-r98p.onrender.com",
+# ]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -84,7 +90,7 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
-# Allowed headers
+# Allowed headers - Added more headers that might be needed
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -95,12 +101,24 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
+    'access-control-allow-origin',
+    'access-control-allow-methods',
+    'access-control-allow-headers',
 ]
 
+# Preflight cache duration
+CORS_PREFLIGHT_MAX_AGE = 86400
+
+# CSRF Settings
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://doctorappointment-r98p.onrender.com",
 ]
+
+# For development, you might want to disable CSRF for API endpoints
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = False
 
 ROOT_URLCONF = "doctorappointmentBackend.urls"
 
@@ -200,9 +218,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',  # Changed for registration endpoint
+    ],
 }
 
 from datetime import timedelta
