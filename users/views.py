@@ -125,14 +125,12 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data['user']
-            
-            # Generate tokens using TokenObtainPairSerializer
-            from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-            token_serializer = TokenObtainPairSerializer()
-            token = token_serializer.get_token(user)
-            
-            dashboard_url = '/doctor-dashboard' if user.is_doctor else '/moms-dashboard'
-            
+
+            # ✅ Correct way to generate JWT tokens
+            token = RefreshToken.for_user(user)
+
+            dashboard_url = '/doctor-dashboard' if user.is_doctor else '/mom-dashboard'
+
             return Response({
                 'user': UserSerializer(user).data,
                 'tokens': {
