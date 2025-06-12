@@ -126,7 +126,6 @@ class LoginView(APIView):
         if serializer.is_valid():
             user = serializer.validated_data['user']
 
-            # ✅ Correct way to generate JWT tokens
             token = RefreshToken.for_user(user)
 
             dashboard_url = '/doctor-dashboard' if user.is_doctor else '/mom-dashboard'
