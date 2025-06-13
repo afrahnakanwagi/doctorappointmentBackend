@@ -14,21 +14,32 @@ from .serializers import (
 
 class DoctorAvailabilityView(generics.ListCreateAPIView):
     """
-    API endpoint for managing doctor's availability
+    API endpoint for:
+    - Doctors to view and create their availability.
+    - Patients to view all doctor availability schedules.
     """
     permission_classes = [IsAuthenticated]
     serializer_class = DoctorAvailabilitySerializer
 
     def get_queryset(self):
-        return DoctorAvailability.objects.filter(doctor=self.request.user)
+        user = self.request.user
+        if hasattr(user, 'is_patient') and user.is_patient:
+            return DoctorAvailability.objects.all()
+        elif hasattr(user, 'is_doctor') and user.is_doctor:
+            return DoctorAvailability.objects.filter(doctor=user)
+        else:
+            return DoctorAvailability.objects.none()
 
     def perform_create(self, serializer):
-        # Assign the logged-in user as the doctor
-        serializer.save(doctor=self.request.user)
+        user = self.request.user
+        if hasattr(user, 'is_doctor') and user.is_doctor:
+            serializer.save(doctor=user)
+        else:
+            raise PermissionDenied("Only doctors can create availability schedules.")
 
     @swagger_auto_schema(
-        operation_description="Get doctor's availability schedule",
-        tag="Appointment Schedules",
+        operation_description="View availability schedules. Patients see all. Doctors see their own.",
+        tags=["Appointment Schedules"],
         responses={
             200: DoctorAvailabilitySerializer(many=True),
             401: "Unauthorized"
@@ -38,13 +49,14 @@ class DoctorAvailabilityView(generics.ListCreateAPIView):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_description="Create new availability schedule",
-        tag="Appointment Schedules",
+        operation_description="Create new availability schedule (Doctors only)",
+        tags=["Appointment Schedules"],
         request_body=DoctorAvailabilitySerializer,
         responses={
             201: DoctorAvailabilitySerializer,
             400: "Bad Request",
-            401: "Unauthorized"
+            401: "Unauthorized",
+            403: "Forbidden"
         }
     )
     def post(self, request, *args, **kwargs):
@@ -52,13 +64,32 @@ class DoctorAvailabilityView(generics.ListCreateAPIView):
 
 class DoctorAvailabilityDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
-    API endpoint for managing specific doctor availability
+    API endpoint for:
+    - Doctors to view, update, and delete their own availability.
+    - Patients to only view availability details.
     """
     permission_classes = [IsAuthenticated]
     serializer_class = DoctorAvailabilitySerializer
 
     def get_queryset(self):
-        return DoctorAvailability.objects.filter(doctor=self.request.user)
+        user = self.request.user
+        if hasattr(user, 'is_doctor') and user.is_doctor:
+            return DoctorAvailability.objects.filter(doctor=user)
+        elif hasattr(user, 'is_patient') and user.is_patient:
+            return DoctorAvailability.objects.all()  # Patients can retrieve all
+        return DoctorAvailability.objects.none()
+
+    def get_object(self):
+        obj = super().get_object()
+        user = self.request.user
+
+        if user.is_patient and self.request.method != "GET":
+            raise PermissionDenied("Patients are not allowed to modify availability.")
+
+        if user.is_doctor and obj.doctor != user:
+            raise PermissionDenied("You can only access your own availability.")
+
+        return obj
 
 class AppointmentSlotView(generics.ListCreateAPIView):
     """
