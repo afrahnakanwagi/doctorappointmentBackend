@@ -171,10 +171,9 @@ class LogoutView(APIView):
 class UserListView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserListSerializer
-    permission_classes = (permissions.IsAdminUser,)
 
     @swagger_auto_schema(
-        operation_description="List all users (Admin only)",
+        operation_description="List all users.",
         tags=['User Management'],
         responses={
             200: UserListSerializer(many=True),
