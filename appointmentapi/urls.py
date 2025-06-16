@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import appointment_type_choices
 
 urlpatterns = [
     # Doctor Availability
@@ -7,8 +8,10 @@ urlpatterns = [
     path('doctor/availability/<int:pk>/', views.DoctorAvailabilityDetailView.as_view(), name='doctor-availability-detail'),
     
     # Appointment Slots
-    path('slots/', views.AppointmentSlotView.as_view(), name='appointment-slots'),
+    path('slots/', views.AvailableSlotsView.as_view(), name='appointment-slots'),
     path('slots/<int:pk>/', views.AppointmentSlotDetailView.as_view(), name='appointment-slot-detail'),
+    path('types/', appointment_type_choices, name='appointment-type-choices'),
+
     
     # Appointments
     path('appointments/', views.AppointmentView.as_view(), name='appointments'),

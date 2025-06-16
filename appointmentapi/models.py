@@ -63,7 +63,7 @@ class Appointment(models.Model):
         ('OTHER', 'Other'),
     ]
     
-    slot = models.OneToOneField(AppointmentSlot, on_delete=models.CASCADE, related_name='appointment')
+    slot = models.OneToOneField(AppointmentSlot, on_delete=models.CASCADE, related_name='appointment', null=True, blank=True)
     patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='patient_appointments')
     appointment_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
