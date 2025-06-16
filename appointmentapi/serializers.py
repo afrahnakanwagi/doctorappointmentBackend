@@ -74,10 +74,10 @@ class AppointmentCreateSerializer(serializers.ModelSerializer):
         doctor_id = data.get('doctor_id')
 
         try:
-            patient_obj = User.objects.get(username=patient, role='patient')
+            patient_obj = User.objects.get(username=patient, is_patient=True)
         except User.DoesNotExist:
             try:
-                patient_obj = User.objects.get(email=patient, role='patient')
+                patient_obj = User.objects.get(email=patient, is_patient=True)
             except User.DoesNotExist:
                 raise serializers.ValidationError({'patient': 'Patient not found.'})
 
