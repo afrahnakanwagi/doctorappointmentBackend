@@ -432,16 +432,19 @@ class AppointmentDetailView(generics.RetrieveAPIView):
 
 class AppointmentStatusView(generics.UpdateAPIView):
     """
-    API endpoint for updating appointment status
+    API endpoint for doctors to update appointment status
+    (PENDING → CONFIRMED/REJECTED)
     """
     permission_classes = [IsAuthenticated]
     serializer_class = AppointmentSerializer
 
     def get_queryset(self):
-        return Appointment.objects.filter(slot__doctor=self.request.user)
+        if self.request.user.is_doctor:
+            return Appointment.objects.filter(slot__doctor=self.request.user)
+        return Appointment.objects.none()
 
     @swagger_auto_schema(
-        operation_description="Update appointment status",
+        operation_description="Update appointment status. Only doctors can update status of their appointments.",
         tag="Appointments Schedules",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -449,33 +452,52 @@ class AppointmentStatusView(generics.UpdateAPIView):
             properties={
                 'status': openapi.Schema(
                     type=openapi.TYPE_STRING,
-                    enum=['PENDING', 'CONFIRMED', 'REJECTED']
+                    enum=['CONFIRMED', 'REJECTED'], 
+                    description="New status for the appointment (CONFIRMED or REJECTED)"
                 )
             }
         ),
         responses={
             200: AppointmentSerializer,
-            400: "Bad Request",
+            400: "Bad Request - Invalid status or invalid transition",
+            403: "Forbidden - User is not the doctor for this appointment",
             404: "Not Found",
             401: "Unauthorized"
         }
     )
     def patch(self, request, *args, **kwargs):
+        if not request.user.is_doctor:
+            return Response(
+                {"error": "Only doctors can update appointment status"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         appointment = self.get_object()
         new_status = request.data.get('status')
-        
-        if new_status not in dict(Appointment.STATUS_CHOICES):
+
+        valid_statuses = ['CONFIRMED', 'REJECTED']
+        if new_status not in valid_statuses:
             return Response(
-                {"error": "Invalid status"},
+                {"error": f"Invalid status. Only {valid_statuses} are allowed"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
+
+        if appointment.status != 'PENDING':
+            return Response(
+                {"error": f"Can only update status from PENDING. Current status is {appointment.status}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         appointment.status = new_status
         appointment.save()
-        
+
+        self._send_status_notification(appointment, new_status)
+
         serializer = self.get_serializer(appointment)
         return Response(serializer.data)
 
+    def _send_status_notification(self, appointment, new_status):
+        pass
 @api_view(['GET'])
 def appointment_type_choices(request):
     choices = [{'value': c[0], 'label': c[1]} for c in Appointment.TYPE_CHOICES]
