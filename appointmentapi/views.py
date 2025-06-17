@@ -301,9 +301,11 @@ class AppointmentView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_doctor or user.is_patient:
+        if user.is_doctor:
             return Appointment.objects.filter(slot__doctor=user)
-        return Appointment.objects.filter(patient=user)
+        elif user.is_patient:
+            return Appointment.objects.filter(patient=user)
+        return Appointment.objects.none()
 
     @swagger_auto_schema(
         operation_description="Get list of appointments",
@@ -409,7 +411,12 @@ class AppointmentDetailView(generics.RetrieveAPIView):
     serializer_class = AppointmentDetailSerializer
 
     def get_queryset(self):
-        return Appointment.objects.filter(slot__doctor=self.request.user)
+        user = self.request.user
+        if user.is_doctor:
+            return Appointment.objects.filter(slot__doctor=user)
+        elif user.is_patient:
+            return Appointment.objects.filter(patient=user)
+        return Appointment.objects.none()
 
     @swagger_auto_schema(
         operation_description="Get detailed information about an appointment",
