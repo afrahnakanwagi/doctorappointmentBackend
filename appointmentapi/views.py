@@ -337,7 +337,7 @@ class AppointmentView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         appointment_data = serializer.validated_data
-        patient = appointment_data.get('patient_obj')
+        patient = appointment_data.get('patient')
         doctor = appointment_data.get('doctor_obj')
         appointment_date = appointment_data.get('appointment_date')
         appointment_start_time = appointment_data.get('appointment_start_time')
